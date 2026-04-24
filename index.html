@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseAI v2 | Premium Discovery Hub</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* CSS Variables & Theme Setup */
+        :root {
+            --bg-color: #070711;
+            --bg-surface: #12121A;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.09);
+            --text-primary: #FFFFFF;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --border-color: rgba(255, 255, 255, 0.08);
+            
+            --accent-gradient: linear-gradient(135deg, #7C3AED, #EC4899);
+            --accent-violet: #7C3AED;
+            --accent-magenta: #EC4899;
+            --accent-cyan: #06B6D4;
+            --color-free: #10B981;
+            --color-freemium: #F59E0B;
+            --color-paid: #EF4444;
+
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --sidebar-width: 240px;
+            --nav-height: 60px;
+            --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: rgba(0, 0, 0, 0.03);
+            --bg-card-hover: rgba(0, 0, 0, 0.06);
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            cursor: none; /* For custom cursor */
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            position: fixed;
+            top: 0; left: 0;
+            width: 8px; height: 8px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease, background 0.3s;
+        }
+        .cursor-ring {
+            position: fixed;
+            top: 0; left: 0;
+            width: 32px; height: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background 0.3s;
+        }
+        [data-theme="light"] .cursor-ring { border-color: rgba(0,0,0,0.2); }
+        body:hover .cursor-ring.active { width: 48px; height: 48px; background: rgba(124, 58, 237, 0.1); border-color: var(--accent-violet); }
+
+        /* Typography */
+        h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.2; font-weight: 700; }
+        .mono { font-family: var(--font-mono); }
+        .text-gradient {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Noise & Background */
+        .bg-noise {
+            position: fixed; inset: 0; z-index: -2;
+            opacity: 0.04; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .bg-orbs {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            pointer-events: none; overflow: hidden;
+        }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.4;
+            animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .orb-1 { width: 500px; height: 500px; background: rgba(124, 58, 237, 0.3); top: -100px; left: -100px; }
+        .orb-2 { width: 600px; height: 600px; background: rgba(236, 72, 153, 0.2); bottom: -200px; right: -100px; animation-delay: -5s; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(100px, 50px) scale(1.2); }
+        }
+
+        /* Scroll Progress */
+        #scrollProgress {
+            position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-gradient);
+            width: 0%; z-index: 2000; transition: width 0.1s;
+        }
+
+        /* Top Ticker */
+        .ticker-wrap {
+            position: fixed; top: 0; left: 0; width: 100%; height: 28px;
+            background: var(--accent-gradient); color: white;
+            z-index: 100; overflow: hidden; display: flex; align-items: center;
+        }
+        .ticker {
+            white-space: nowrap; font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            animation: ticker 40s linear infinite;
+        }
+        .ticker-wrap:hover .ticker { animation-play-state: paused; }
+        .ticker span { padding: 0 2rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* Top Nav */
+        header.top-nav {
+            position: fixed; top: 28px; left: var(--sidebar-width); right: 0; height: var(--nav-height);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 2rem; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color); z-index: 90;
+            background: rgba(7, 7, 17, 0.7);
+        }
+        [data-theme="light"] header.top-nav { background: rgba(255, 255, 255, 0.7); }
+        .nav-actions { display: flex; gap: 1rem; align-items: center; }
+        
+        button { font-family: var(--font-body); font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; transition: var(--transition-smooth) 0.2s; outline: none;}
+        .btn-icon { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center; background: var(--bg-card); }
+        .btn-icon:hover { border-color: var(--text-secondary); background: var(--bg-card-hover); }
+        
+        .search-box {
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 8px; color: var(--text-secondary); font-size: 0.875rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .search-box:hover { border-color: var(--accent-violet); color: var(--text-primary); }
+        .kbd { background: var(--bg-surface); padding: 0.1rem 0.4rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.7rem; border: 1px solid var(--border-color); }
+
+        /* Sidebar */
+        aside.sidebar {
+            position: fixed; top: 28px; left: 0; bottom: 0; width: var(--sidebar-width);
+            background: var(--bg-surface); border-right: 1px solid var(--border-color);
+            padding: 1.5rem; z-index: 95; display: flex; flex-direction: column;
+            overflow-y: auto;
+        }
+        .brand { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: 3rem; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.05em; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 0.25rem; }
+        .menu-item {
+            padding: 0.75rem 1rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem;
+            color: var(--text-secondary); text-decoration: none; font-size: 0.95rem;
+            font-weight: 500; transition: var(--transition-smooth) 0.3s;
+        }
+        .menu-item i { font-size: 1.25rem; }
+        .menu-item:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+        .menu-item.active { background: rgba(124, 58, 237, 0.1); color: var(--accent-violet); font-weight: 700; border-left: 3px solid var(--accent-violet); border-radius: 0 8px 8px 0; }
+
+        /* Main Content Layout */
+        main {
+            margin-top: calc(28px + var(--nav-height));
+            margin-left: var(--sidebar-width);
+            padding: 3rem;
+            min-height: 100vh;
+        }
+
+        /* Hero */
+        .hero { margin-bottom: 4rem; max-width: 800px; }
+        .hero h1 { font-size: clamp(3rem, 5vw, 4.5rem); letter-spacing: -0.04em; margin-bottom: 1rem; }
+        .hero p { font-size: 1.25rem; color: var(--text-secondary); max-width: 600px; }
+
+        /* Category Sections */
+        .category-section { margin-bottom: 6rem; scroll-margin-top: calc(28px + var(--nav-height) + 2rem); }
+        .section-header { margin-bottom: 2rem; position: relative; display: inline-block; }
+        .section-header h2 { font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem; }
+        .section-header::after { content: ''; position: absolute; left: 0; bottom: -8px; width: 40px; height: 3px; background: var(--accent-gradient); border-radius: 2px; }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        /* Signature Hover Card */
+        .card-wrapper {
+            position: relative;
+            height: 220px;
+            z-index: 1;
+        }
+
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            transform-origin: center center;
+            transition: transform 0.4s var(--transition-bounce), box-shadow 0.4s ease, opacity 0.4s ease, border-color 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .tool-card::before {
+            content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 1px;
+            background: var(--accent-gradient); opacity: 0; transition: opacity 0.4s ease;
+        }
+
+        /* Card Elements */
+        .card-top { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; z-index: 2; position: relative;}
+        .card-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; background: var(--bg-surface); border: 1px solid var(--border-color); }
+        .card-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; line-height: 1.1; margin-bottom: 0.25rem;}
+        .card-cat { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-cyan); }
+        .badge-new { background: rgba(16, 185, 129, 0.1); color: var(--color-free); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700; animation: pulseGlow 2s infinite; font-family: var(--font-mono); }
+        .badge-hot { background: rgba(245, 158, 11, 0.1); color: var(--color-freemium); border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700; font-family: var(--font-mono); }
+
+        .card-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; transition: opacity 0.3s; margin-bottom: 1rem; flex-grow: 1;}
+
+        /* Expanded Hidden Elements */
+        .card-hidden {
+            display: none; opacity: 0; flex-direction: column; gap: 1rem;
+            animation: fadeIn 0.3s ease forwards; animation-delay: 0.1s;
+        }
+        
+        .use-cases { font-size: 0.85rem; color: var(--text-primary); list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+        .use-cases li { display: flex; align-items: center; gap: 0.5rem; }
+        .use-cases i { color: var(--success); font-size: 0.9rem; }
+
+        .card-meta { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+        .pricing-badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; border: 1px solid; }
+        .pricing-free { color: var(--color-free); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+        .pricing-freemium { color: var(--color-freemium); background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+        .pricing-paid { color: var(--color-paid); background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+        
+        .rating { color: var(--color-freemium); display: flex; align-items: center; gap: 0.25rem; font-family: var(--font-body); font-weight: 700;}
+        
+        .card-actions-hover { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .btn-preview { flex: 1; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; color: var(--text-primary); font-size: 0.85rem; font-weight: 600; }
+        .btn-preview:hover { border-color: var(--accent-violet); background: rgba(124, 58, 237, 0.05); }
+        .btn-visit { flex: 1; padding: 0.6rem; background: var(--text-primary); color: var(--bg-base); border-radius: 6px; text-align: center; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.25rem; }
+        .btn-visit:hover { transform: scale(1.02); }
+
+        /* The Hover State Mechanics */
+        .tool-card.is-expanded {
+            bottom: auto; /* allow auto height to grow downwards */
+            height: auto;
+            min-height: 400px;
+            z-index: 50;
+            transform: scale(1.05);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--accent-violet);
+            background: var(--bg-surface);
+        }
+        .tool-card.is-expanded::before { opacity: 1; }
+        .tool-card.is-expanded .card-desc { -webkit-line-clamp: 2; line-clamp: 2; margin-bottom: 0.5rem; }
+        .tool-card.is-expanded .card-hidden { display: flex; }
+        
+        /* Sibling Dimming via parent class */
+        .grid.has-expanded-child .tool-card:not(.is-expanded) {
+            opacity: 0.4;
+            transform: scale(0.97);
+            filter: blur(2px);
+            pointer-events: none;
+        }
+
+        /* Drawer Overlay */
+        .drawer-overlay {
+            position: fixed; inset: 0; background: rgba(7, 7, 17, 0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .drawer {
+            position: absolute; right: 0; top: 0; bottom: 0; width: 100%; max-width: 500px;
+            background: var(--bg-surface); border-left: 1px solid var(--border-color);
+            transform: translateX(100%); transition: transform 0.5s var(--transition-bounce);
+            display: flex; flex-direction: column; box-shadow: -20px 0 80px rgba(0,0,0,0.5);
+        }
+        .drawer-overlay.active .drawer { transform: translateX(0); }
+        
+        .drawer-hero { height: 200px; background: #222; position: relative; }
+        .drawer-hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        .drawer-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, var(--bg-surface)); }
+        
+        .drawer-close { position: absolute; top: 1rem; right: 1rem; z-index: 10; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: 0.2s; }
+        .drawer-close:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
+
+        .drawer-content { padding: 2rem; overflow-y: auto; flex: 1; position: relative; top: -60px; z-index: 5; }
+        .drawer-title { font-family: var(--font-display); font-size: 2.5rem; line-height: 1; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
+        .drawer-tagline { font-size: 1.1rem; color: var(--accent-cyan); font-style: italic; margin-bottom: 2rem; }
+        
+        .drawer-section { margin-bottom: 2rem; }
+        .drawer-section h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; font-family: var(--font-mono); }
+        .drawer-desc { font-size: 1rem; color: var(--text-secondary); line-height: 1.6; }
+        
+        .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+        .bullet-list li { display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-primary); background: var(--bg-card); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
+        .bullet-list i { color: var(--accent-violet); font-size: 1.2rem; margin-top: 0.1rem; }
+        
+        .tag-list { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tag { background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.4rem 0.8rem; border-radius: 100px; font-size: 0.85rem; color: var(--text-primary); }
+        
+        .drawer-footer { padding: 1.5rem 2rem; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 1rem; }
+        .btn-launch { flex: 1; background: var(--accent-gradient); color: white; border: none; padding: 1rem; border-radius: 8px; font-size: 1rem; font-weight: 700; text-align: center; text-decoration: none; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+        .btn-launch:hover { box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4); transform: translateY(-2px); }
+
+        /* Command Palette */
+        .cmd-overlay {
+            position: fixed; inset: 0; background: rgba(7, 7, 17, 0.8); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+            z-index: 2000; opacity: 0; pointer-events: none; transition: 0.2s;
+            display: flex; justify-content: center; padding-top: 10vh;
+        }
+        .cmd-overlay.active { opacity: 1; pointer-events: auto; }
+        .cmd-modal {
+            width: 100%; max-width: 600px; background: var(--bg-surface);
+            border: 1px solid var(--border-color); border-radius: 16px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8); overflow: hidden;
+            transform: scale(0.95) translateY(-20px); transition: 0.3s var(--transition-bounce);
+            display: flex; flex-direction: column; max-height: 70vh;
+        }
+        .cmd-overlay.active .cmd-modal { transform: scale(1) translateY(0); }
+        
+        .cmd-input-wrap { padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem; }
+        .cmd-input-wrap i { color: var(--text-secondary); font-size: 1.5rem; }
+        .cmd-input { width: 100%; background: transparent; border: none; outline: none; color: var(--text-primary); font-family: var(--font-body); font-size: 1.25rem; }
+        .cmd-results { padding: 0.5rem; overflow-y: auto; flex: 1; }
+        .cmd-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 8px; cursor: pointer; transition: 0.1s; }
+        .cmd-item:hover, .cmd-item.selected { background: var(--bg-card-hover); }
+        .cmd-item-logo { width: 32px; height: 32px; border-radius: 6px; }
+        .cmd-item-details { flex: 1; }
+        .cmd-item-name { font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;}
+        .cmd-item-cat { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Inline Style Replacements */
+        .brand-dot { width: 12px; height: 12px; background: var(--accent-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--accent-cyan); }
+        .drawer-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .drawer-badges { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .drawer-logo { width: 56px; height: 56px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .drawer-how-to { font-family: var(--font-mono); font-size: 0.9rem; padding: 1rem; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); }
+        .drawer-stats { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 2rem; }
+        .drawer-stats h3 { margin-bottom: 0.25rem; }
+        .drawer-rating-wrapper { text-align: right; }
+        .rating-date { font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: 400; }
+        .badge-cat { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-secondary); text-transform: uppercase; }
+        .cmd-no-results { padding: 2rem; text-align: center; color: var(--text-muted); }
+
+        /* Scroll Reveal Animation */
+        .reveal { opacity: 0; transform: translateY(30px); filter: blur(5px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        /* Keyframes */
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+        }
+        @media (max-width: 768px) {
+            :root { --sidebar-width: 0px; }
+            aside.sidebar { top: auto; bottom: 0; width: 100%; height: 70px; border-right: none; border-top: 1px solid var(--border-color); flex-direction: row; padding: 0; overflow-x: auto; z-index: 100;}
+            .brand, .sidebar-menu span { display: none; }
+            .sidebar-menu { flex-direction: row; width: 100%; justify-content: space-around; padding: 0 1rem; align-items: center; }
+            .menu-item { padding: 1rem; border-radius: 50%; }
+            .menu-item.active { border-left: none; border-bottom: 2px solid var(--accent-violet); border-radius: 0; }
+            main { margin-left: 0; padding: 1.5rem; margin-bottom: 70px; }
+            header.top-nav { left: 0; padding: 0 1rem; }
+            .hero h1 { font-size: 2.5rem; }
+            .tool-card.is-expanded { position: relative; transform: none; box-shadow: none; z-index: 1;}
+            .grid.has-expanded-child .tool-card:not(.is-expanded) { opacity: 1; transform: none; filter: none; }
+            .cursor-dot, .cursor-ring { display: none; } /* Disable custom cursor on mobile */
+            .drawer { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Atmospheric Effects -->
+    <div class="bg-noise"></div>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Scroll Progress -->
+    <div id="scrollProgress"></div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Top Banner Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker" id="tickerContent">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="search-box" onclick="toggleCmdK()">
+            <i class="ph ph-magnifying-glass"></i>
+            <span>Search tools...</span>
+            <span class="kbd">Cmd K</span>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="toggleTheme()" aria-label="Toggle Theme">
+                <i class="ph ph-moon" id="themeIcon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Sticky Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-dot"></div>
+            PulseAI
+        </div>
+        <nav class="sidebar-menu" id="sidebarMenu">
+            <!-- Populated by JS -->
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <section class="hero reveal">
+            <h1>Discover <span class="text-gradient">AI Tools</span> that redefine workflow.</h1>
+            <p>The definitive registry of the most powerful artificial intelligence applications, agents, and models across the globe. Updated in real-time.</p>
+        </section>
+
+        <div id="mainContainers">
+            <!-- Categories injected here -->
+        </div>
+    </main>
+
+    <!-- Tool Detail Drawer Overlay -->
+    <div class="drawer-overlay" id="drawerOverlay">
+        <div class="drawer" id="drawerPanel" onclick="event.stopPropagation()">
+            <button class="drawer-close" aria-label="Close Drawer" onclick="closeDrawer()"><i class="ph ph-x"></i></button>
+            <div class="drawer-hero">
+                <img id="drawerImage" src="" alt="Cover">
+            </div>
+            <div class="drawer-content">
+                <div class="drawer-header">
+                    <div>
+                        <div class="drawer-badges" id="drawerBadges"></div>
+                        <h2 class="drawer-title" id="drawerTitle">Tool Name</h2>
+                    </div>
+                    <img id="drawerLogo" src="" alt="Logo" class="drawer-logo">
+                </div>
+                <p class="drawer-tagline" id="drawerTagline">Tagline goes here</p>
+                
+                <div class="drawer-section">
+                    <h3>What is it?</h3>
+                    <p class="drawer-desc" id="drawerDesc">Description goes here.</p>
+                </div>
+
+                <div class="drawer-section">
+                    <h3>Key Use Cases</h3>
+                    <ul class="bullet-list" id="drawerUseCases">
+                    </ul>
+                </div>
+
+                <div class="drawer-section">
+                    <h3>Best For</h3>
+                    <div class="tag-list" id="drawerTarget">
+                    </div>
+                </div>
+
+                <div class="drawer-section">
+                    <h3>How to get it</h3>
+                    <p class="drawer-desc drawer-how-to" id="drawerHowTo"></p>
+                </div>
+                
+                <div class="drawer-section drawer-stats">
+                    <div>
+                        <h3>Pricing</h3>
+                        <span id="drawerPricing" class="pricing-badge"></span>
+                    </div>
+                    <div class="drawer-rating-wrapper">
+                        <h3>Rating</h3>
+                        <div class="rating" id="drawerRating"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <a href="#" target="_blank" class="btn-launch" id="drawerLink">Open Tool <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="cmd-overlay" id="cmdOverlay">
+        <div class="cmd-modal" onclick="event.stopPropagation()">
+            <div class="cmd-input-wrap">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="text" class="cmd-input" id="cmdInput" placeholder="Search 40+ AI tools by name or keyword..." autocomplete="off">
+                <kbd class="kbd">ESC</kbd>
+            </div>
+            <div class="cmd-results" id="cmdResults">
+                <!-- Search results injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 1. DATA DEFINITION (40+ Tools)
+         */
+        const TOOLS = [
+            // Coding & Dev
+            { id: "t1", name: "Claude 3.5 Sonnet", tagline: "Intelligence at warp speed.", category: "Coding", description: "Anthropic's fastest model that sets new industry benchmarks for reasoning, coding, and multilingual understanding with a highly visual computer use capability.", useCases: ["Complex code generation", "Rapid refactoring", "Data analysis"], target: ["Developers", "Enterprise", "Data Scientists"], howToGet: "1. Go to anthropic.com -> 2. Sign up -> 3. Use via API or Chat", link: "https://anthropic.com", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "Jun 2024", rating: 4.9 },
+            { id: "t2", name: "Cursor", tagline: "The AI Code Editor.", category: "Coding", description: "A fork of VS Code with powerful AI pair-programming features built in. It understands your entire codebase and writes code with you.", useCases: ["Codebase-wide edits", "Inline AI prompting", "Terminal error debugging"], target: ["Software Engineers", "Startups"], howToGet: "1. Download app -> 2. Sign in -> 3. Code faster", link: "https://cursor.com", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2023", rating: 4.9 },
+            { id: "t3", name: "GitHub Copilot", tagline: "Your AI pair programmer.", category: "Coding", description: "Provides autocomplete-style suggestions from an AI pair programmer as you code. Integrated directly into editors.", useCases: ["Autocomplete", "Test generation", "Code explanation"], target: ["Developers", "Teams"], howToGet: "1. Install extension -> 2. Subscribe -> 3. Start typing", link: "https://github.com/features/copilot", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2021", rating: 4.6 },
+            { id: "t4", name: "v0.dev", tagline: "Generative UI system.", category: "Coding", description: "Vercel's generative UI system that creates React components and Tailwind CSS from text prompts.", useCases: ["Rapid UI prototyping", "Component generation", "Design to code"], target: ["Frontend Devs", "Designers"], howToGet: "1. Go to v0.dev -> 2. Type prompt -> 3. Copy React code", link: "https://v0.dev", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2023", rating: 4.8 },
+            { id: "t5", name: "Lovable", tagline: "Build apps instantly.", category: "Coding", description: "An AI coding assistant that helps you build full-stack web applications by simply describing them.", useCases: ["Full-stack generation", "MVP building", "UI creation"], target: ["Founders", "Indie Hackers"], howToGet: "1. Go to site -> 2. Describe app -> 3. Deploy", link: "https://lovable.dev", pricing: "Paid", isNew: true, isTrending: true, launchDate: "2024", rating: 4.7 },
+            { id: "t6", name: "Bolt.new", tagline: "In-browser web dev agent.", category: "Coding", description: "A WebContainers-powered AI agent that builds, runs, and deploys full web applications directly in the browser.", useCases: ["Instant scaffolding", "Browser-based execution", "Iterative building"], target: ["Web Devs", "Prototypers"], howToGet: "1. Visit bolt.new -> 2. Prompt -> 3. Preview live", link: "https://bolt.new", pricing: "Freemium", isNew: true, isTrending: true, launchDate: "2024", rating: 4.8 },
+            { id: "t7", name: "Codeium", tagline: "Free AI code acceleration.", category: "Coding", description: "A free alternative to Copilot offering powerful autocomplete, chat, and command generation in various IDEs.", useCases: ["Autocomplete", "Chat assistant", "Command search"], target: ["Students", "Devs on a budget"], howToGet: "1. Download extension -> 2. Register free -> 3. Code", link: "https://codeium.com", pricing: "Free", isNew: false, isTrending: false, launchDate: "2022", rating: 4.7 },
+            { id: "t8", name: "Tabnine", tagline: "AI assistant for software devs.", category: "Coding", description: "AI code completion tool that learns your coding patterns and provides personalized suggestions.", useCases: ["Code completion", "Pattern learning", "Privacy-first coding"], target: ["Enterprise Devs"], howToGet: "1. Install IDE plugin -> 2. Authenticate -> 3. Code", link: "https://tabnine.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2018", rating: 4.4 },
+            { id: "t9", name: "Replit AI", tagline: "Code anywhere with AI.", category: "Coding", description: "AI-powered coding environment right in your browser. Generates, explains, and debugs code instantly.", useCases: ["Prototyping", "Learning to code", "Cloud deployment"], target: ["Beginners", "Hackathon builders"], howToGet: "1. Sign up -> 2. Open IDE -> 3. Code", link: "https://replit.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2023", rating: 4.5 },
+            
+            // Writing
+            { id: "t10", name: "ChatGPT", tagline: "The AI that started it all.", category: "Writing", description: "OpenAI's flagship conversational model. Excellent for drafting, brainstorming, and general-purpose text generation.", useCases: ["Drafting content", "Brainstorming", "Summarization"], target: ["Everyone"], howToGet: "1. Visit chatgpt.com -> 2. Log in -> 3. Chat", link: "https://chatgpt.com", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "Nov 2022", rating: 4.8 },
+            { id: "t11", name: "Jasper", tagline: "AI for enterprise marketing.", category: "Writing", description: "An AI content generator designed specifically for marketing teams to create blogs, ad copy, and social media posts.", useCases: ["Blog writing", "Ad copywriting", "Brand voice alignment"], target: ["Marketers", "Agencies"], howToGet: "1. Choose plan -> 2. Train brand voice -> 3. Generate", link: "https://jasper.ai", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2021", rating: 4.5 },
+            { id: "t12", name: "Copy.ai", tagline: "Write better copy, faster.", category: "Writing", description: "AI copywriting tool that helps teams generate high-converting marketing copy and automate content workflows.", useCases: ["Social media posts", "Email sequences", "Product descriptions"], target: ["Copywriters", "Founders"], howToGet: "1. Sign up -> 2. Choose template -> 3. Edit & export", link: "https://copy.ai", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2020", rating: 4.6 },
+            { id: "t13", name: "Grammarly AI", tagline: "Beyond spell check.", category: "Writing", description: "Grammarly's generative AI feature that helps rewrite, shorten, or change the tone of your text across the web.", useCases: ["Tone adjustment", "Proofreading", "Email drafting"], target: ["Professionals", "Students"], howToGet: "1. Install extension -> 2. Click widget -> 3. Improve text", link: "https://grammarly.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2023", rating: 4.7 },
+            { id: "t14", name: "Writesonic", tagline: "SEO-optimized content.", category: "Writing", description: "Generates SEO-friendly articles, blogs, and marketing copy with real-time web search capabilities.", useCases: ["SEO blogs", "Landing pages", "Ad copy"], target: ["SEO Specialists", "Bloggers"], howToGet: "1. Sign up -> 2. Enter keyword -> 3. Generate article", link: "https://writesonic.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2021", rating: 4.4 },
+            { id: "t15", name: "DeepL", tagline: "Most accurate translator.", category: "Writing", description: "Neural machine translation service that provides highly accurate and nuanced translations across dozens of languages.", useCases: ["Document translation", "Localization", "Multilingual communication"], target: ["Translators", "Global Teams"], howToGet: "1. Visit website -> 2. Paste text -> 3. Copy translation", link: "https://deepl.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2017", rating: 4.9 },
+
+            // Design
+            { id: "t16", name: "Midjourney v6", tagline: "Next-gen AI image generation.", category: "Design", description: "An AI image generator with vastly improved photorealism, text rendering capabilities, and compositional understanding.", useCases: ["Concept art", "Photorealistic rendering", "Asset creation"], target: ["Artists", "Designers"], howToGet: "1. Join Discord -> 2. /imagine -> 3. Upscale", link: "https://midjourney.com", pricing: "Paid", isNew: true, isTrending: true, launchDate: "Dec 2023", rating: 4.9 },
+            { id: "t17", name: "DALL·E 3", tagline: "Images from text natively.", category: "Design", description: "OpenAI's latest image generation model integrated into ChatGPT, capable of strictly following complex textual prompts.", useCases: ["Illustration", "Social graphics", "Concepting"], target: ["Marketers", "Creators"], howToGet: "1. Open ChatGPT -> 2. Ask for image -> 3. Download", link: "https://openai.com/dall-e-3", pricing: "Paid", isNew: false, isTrending: false, launchDate: "Oct 2023", rating: 4.7 },
+            { id: "t18", name: "Adobe Firefly", tagline: "Commercially safe AI.", category: "Design", description: "Adobe's family of creative generative AI models integrated into Photoshop and Illustrator.", useCases: ["Generative Fill", "Text effects", "Vector recoloring"], target: ["Professional Designers"], howToGet: "1. Open Adobe CC -> 2. Use Firefly tools -> 3. Export", link: "https://adobe.com/firefly", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2023", rating: 4.8 },
+            { id: "t19", name: "Ideogram", tagline: "Typography in AI art.", category: "Design", description: "An AI image generator specifically known for its unparalleled ability to render legible, stylistic text within images.", useCases: ["Logo design", "Poster generation", "Meme creation"], target: ["Graphic Designers", "Social Managers"], howToGet: "1. Go to ideogram.ai -> 2. Type prompt -> 3. Generate", link: "https://ideogram.ai", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2023", rating: 4.6 },
+
+            // Video
+            { id: "t20", name: "Sora", tagline: "Creating video from text.", category: "Video", description: "OpenAI's text-to-video model capable of generating up to one minute of high-fidelity video featuring complex camera motion.", useCases: ["B-roll generation", "Concept previz", "Stock video"], target: ["Video Creators", "Filmmakers"], howToGet: "1. Apply for access -> 2. Waitlist -> 3. Generate", link: "https://openai.com/sora", pricing: "Paid", isNew: false, isTrending: true, launchDate: "Feb 2024", rating: 4.9 },
+            { id: "t21", name: "Runway Gen-3", tagline: "The next frontier of video.", category: "Video", description: "High-fidelity text-to-video and image-to-video generation with incredible temporal consistency and cinematic realism.", useCases: ["Cinematic generation", "VFX concepting", "Motion graphics"], target: ["VFX Artists", "Directors"], howToGet: "1. Sign up -> 2. Upload image/prompt -> 3. Generate", link: "https://runwayml.com", pricing: "Freemium", isNew: true, isTrending: true, launchDate: "2024", rating: 4.8 },
+            { id: "t22", name: "Kling", tagline: "Hyper-realistic video AI.", category: "Video", description: "A powerful text-to-video model from Kuaishou that generates ultra-realistic physics and long video generations.", useCases: ["Realistic simulation", "Cinematic shots", "Character motion"], target: ["Content Creators"], howToGet: "1. Register -> 2. Input prompt -> 3. Render", link: "https://kling.kuaishou.com", pricing: "Freemium", isNew: true, isTrending: true, launchDate: "2024", rating: 4.7 },
+            { id: "t23", name: "Synthesia", tagline: "AI video with avatars.", category: "Video", description: "Create professional videos from text in multiple languages using realistic AI avatars without cameras or studios.", useCases: ["Training videos", "Marketing content", "Internal comms"], target: ["Corporate HR", "Marketers"], howToGet: "1. Select avatar -> 2. Type script -> 3. Generate", link: "https://synthesia.io", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2020", rating: 4.5 },
+            { id: "t24", name: "HeyGen", tagline: "Studio-quality AI avatars.", category: "Video", description: "Produce studio-quality videos with AI-generated avatars and voices. Perfect for product marketing and translations.", useCases: ["Video translation", "Marketing videos", "Sales outreach"], target: ["Sales Teams", "Creators"], howToGet: "1. Record 2 min video -> 2. Clone avatar -> 3. Generate", link: "https://heygen.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2022", rating: 4.7 },
+            { id: "t25", name: "Pika Labs", tagline: "Idea to video in seconds.", category: "Video", description: "An AI video generation platform allowing you to animate images and generate videos from text prompts.", useCases: ["Animation", "Image to video", "Lip sync"], target: ["Animators", "Social Media"], howToGet: "1. Go to pika.art -> 2. Prompt -> 3. Download", link: "https://pika.art", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2023", rating: 4.6 },
+
+            // Voice
+            { id: "t26", name: "ElevenLabs", tagline: "Generative Voice AI.", category: "Voice", description: "The most realistic AI speech software. Generate lifelike voiceovers for videos, podcasts, and games in any language.", useCases: ["Audiobook narration", "Video voiceovers", "Voice cloning"], target: ["Podcasters", "Game Devs"], howToGet: "1. Sign up -> 2. Type text -> 3. Download audio", link: "https://elevenlabs.io", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2022", rating: 4.9 },
+            { id: "t27", name: "Descript", tagline: "Write, record, transcribe, edit.", category: "Voice", description: "A video and audio editor that works like a doc. Edit your podcast or video by editing the text transcript.", useCases: ["Podcast editing", "Overdubbing", "Transcribing"], target: ["Editors", "YouTubers"], howToGet: "1. Download app -> 2. Import media -> 3. Edit text", link: "https://descript.com", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2019", rating: 4.7 },
+
+            // Productivity
+            { id: "t28", name: "Notion AI", tagline: "Your connected workspace.", category: "Productivity", description: "Integrated AI features inside your workspace to summarize notes, generate action items, and write better content.", useCases: ["Note summarization", "Action item extraction", "Drafting docs"], target: ["Teams", "Individuals"], howToGet: "1. Open Notion -> 2. Press Space -> 3. Ask AI", link: "https://notion.so", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2023", rating: 4.7 },
+            { id: "t29", name: "Otter.ai", tagline: "AI meeting assistant.", category: "Productivity", description: "Records meetings, takes notes in real time, and generates an automated summary to share with your team.", useCases: ["Meeting transcription", "Summary generation", "Action items"], target: ["Remote Teams", "Managers"], howToGet: "1. Connect calendar -> 2. Bot joins meeting -> 3. Read notes", link: "https://otter.ai", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2018", rating: 4.5 },
+            { id: "t30", name: "Gamma.app", tagline: "A new medium for ideas.", category: "Productivity", description: "Create beautiful, engaging presentations, webpages, and documents in seconds using AI.", useCases: ["Presentations", "Pitch decks", "Landing pages"], target: ["Founders", "Sales Teams"], howToGet: "1. Sign up -> 2. Enter topic -> 3. Generate deck", link: "https://gamma.app", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2023", rating: 4.8 },
+            { id: "t31", name: "Beautiful.ai", tagline: "Design-aware slides.", category: "Productivity", description: "Generative AI presentation maker that applies design rules in real-time so your slides always look professional.", useCases: ["Slide design", "Data visualization", "Team templates"], target: ["Consultants", "Marketers"], howToGet: "1. Sign up -> 2. Add content -> 3. Auto-design", link: "https://beautiful.ai", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2018", rating: 4.5 },
+            { id: "t32", name: "Mem.ai", tagline: "Self-organizing workspace.", category: "Productivity", description: "An AI-powered notes app that uses your past notes to help you write, organize, and recall information effortlessly.", useCases: ["Knowledge management", "Smart search", "Writing assistance"], target: ["Knowledge Workers"], howToGet: "1. Sign up -> 2. Dump notes -> 3. Ask Mem", link: "https://mem.ai", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2021", rating: 4.3 },
+            { id: "t33", name: "Reflect", tagline: "Think better with AI.", category: "Productivity", description: "A minimalist note-taking app with AI integration to summarize, rephrase, and organize your daily thoughts.", useCases: ["Daily journaling", "Meeting notes", "Thought organization"], target: ["Founders", "Thinkers"], howToGet: "1. Sign up -> 2. Write notes -> 3. Use AI commands", link: "https://reflect.app", pricing: "Paid", isNew: false, isTrending: false, launchDate: "2022", rating: 4.6 },
+
+            // Research
+            { id: "t34", name: "Perplexity", tagline: "Where knowledge begins.", category: "Research", description: "An AI search engine that delivers direct, cited answers to complex queries in real-time, removing SEO spam.", useCases: ["Academic research", "Real-time news", "Code lookup"], target: ["Researchers", "Curious Minds"], howToGet: "1. Go to perplexity.ai -> 2. Ask question -> 3. Read answer", link: "https://perplexity.ai", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2022", rating: 4.9 },
+            { id: "t35", name: "Elicit", tagline: "Analyze research at scale.", category: "Research", description: "An AI research assistant that finds relevant papers, extracts key data, and summarizes findings for systematic reviews.", useCases: ["Literature review", "Data extraction", "Paper summarization"], target: ["Academics", "PhDs"], howToGet: "1. Search topic -> 2. Select papers -> 3. Extract data", link: "https://elicit.org", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2021", rating: 4.8 },
+            { id: "t36", name: "Consensus", tagline: "Evidence-based answers.", category: "Research", description: "An AI search engine that extracts and summarizes findings directly from peer-reviewed scientific research.", useCases: ["Scientific queries", "Fact-checking", "Academic writing"], target: ["Scientists", "Journalists"], howToGet: "1. Ask question -> 2. Review consensus -> 3. Cite sources", link: "https://consensus.app", pricing: "Freemium", isNew: false, isTrending: false, launchDate: "2022", rating: 4.6 },
+
+            // Agents
+            { id: "t37", name: "Devin", tagline: "Autonomous software engineer.", category: "Agents", description: "Devin is an autonomous agent that solves engineering tasks using its own shell, code editor, and web browser.", useCases: ["Full-stack development", "Bug fixing", "Learning APIs"], target: ["Engineering Teams"], howToGet: "1. Join Waitlist -> 2. Get Access -> 3. Assign Tasks", link: "https://cognition.ai", pricing: "Paid", isNew: true, isTrending: true, launchDate: "Mar 2024", rating: 4.8 },
+            { id: "t38", name: "AutoGPT", tagline: "Make AI autonomous.", category: "Agents", description: "An experimental open-source application showcasing the capabilities of LLMs to autonomously achieve whatever goal you set.", useCases: ["Market research", "Task automation", "Code execution"], target: ["Tinkerers", "Hackers"], howToGet: "1. Clone repo -> 2. Add API keys -> 3. Give goal", link: "https://github.com/Significant-Gravitas/AutoGPT", pricing: "Free", isNew: false, isTrending: false, launchDate: "2023", rating: 4.3 },
+
+            // 3D & Data
+            { id: "t39", name: "Luma AI", tagline: "Unmatched 3D from photos.", category: "3D", description: "Uses Neural Radiance Fields (NeRF) to capture photorealistic 3D scenes and objects simply using your smartphone.", useCases: ["VFX assets", "E-commerce 3D", "Game development"], target: ["3D Artists", "VFX"], howToGet: "1. Download app -> 2. Scan object -> 3. Export 3D model", link: "https://lumalabs.ai", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2022", rating: 4.8 },
+            { id: "t40", name: "Julius AI", tagline: "Your AI data analyst.", category: "Data", description: "Connect your data sets (CSV, Excel, SQL) and Julius will analyze, visualize, and model your data through natural language.", useCases: ["Data visualization", "Statistical analysis", "Data cleaning"], target: ["Data Analysts", "Marketers"], howToGet: "1. Upload data -> 2. Ask questions -> 3. Export charts", link: "https://julius.ai", pricing: "Freemium", isNew: false, isTrending: true, launchDate: "2023", rating: 4.7 }
+        ];
+
+        // Categories extraction
+        const CATEGORIES = ["All", ...new Set(TOOLS.map(t => t.category))].sort();
+
+        /**
+         * 2. INITIALIZATION & LAYOUT
+         */
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const mainContainers = document.getElementById('mainContainers');
+        const tickerContent = document.getElementById('tickerContent');
+
+        function initApp() {
+            // Populate Ticker
+            const trending = TOOLS.filter(t => t.isTrending).map(t => t.name).join(' &bull; ');
+            tickerContent.innerHTML = `<span>🔥 TRENDING NOW: &nbsp; ${trending} &nbsp; &bull; &nbsp; ${trending}</span>`;
+
+            // Populate Sidebar Categories
+            sidebarMenu.innerHTML = CATEGORIES.map((cat, index) => {
+                const iconMap = {
+                    "All": "ph-asterisk", "Coding": "ph-code", "Writing": "ph-pencil-line",
+                    "Design": "ph-paint-brush", "Video": "ph-video-camera", "Voice": "ph-microphone",
+                    "Productivity": "ph-check-circle", "Research": "ph-magnifying-glass",
+                    "Agents": "ph-robot", "3D": "ph-cube", "Data": "ph-chart-bar"
+                };
+                const icon = iconMap[cat] || "ph-circles-four";
+                return `<a href="#cat-${cat.toLowerCase()}" class="menu-item ${index === 0 ? 'active' : ''}" data-cat="${cat}">
+                            <i class="ph ${icon}"></i> <span>${cat}</span>
+                        </a>`;
+            }).join('');
+
+            // Sidebar click interactions
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    
+                    if(e.currentTarget.getAttribute('data-cat') === 'All') {
+                        e.preventDefault();
+                        window.scrollTo(0,0);
+                        document.querySelectorAll('.category-section').forEach(s => s.style.display = 'block');
+                    }
+                });
+            });
+
+            // Render Grids per Category
+            const catsToRender = CATEGORIES.filter(c => c !== "All");
+            catsToRender.forEach(cat => {
+                const toolsInCat = TOOLS.filter(t => t.category === cat);
+                if(toolsInCat.length === 0) return;
+
+                const section = document.createElement('section');
+                section.className = 'category-section reveal';
+                section.id = `cat-${cat.toLowerCase()}`;
+                
+                section.innerHTML = `
+                    <div class="section-header">
+                        <h2>${cat}</h2>
+                    </div>
+                    <div class="grid" id="grid-${cat.toLowerCase()}"></div>
+                `;
+                mainContainers.appendChild(section);
+
+                const grid = section.querySelector('.grid');
+                toolsInCat.forEach(tool => {
+                    grid.appendChild(createToolCard(tool));
+                });
+            });
+
+            // Initialize Observers
+            setupScrollSpy();
+            setupIntersectionObserver();
+            setupHoverMechanics();
+        }
+
+        /**
+         * 3. COMPONENT GENERATION
+         */
+        function createToolCard(tool) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+
+            const div = document.createElement('div');
+            div.className = 'tool-card';
+            div.dataset.id = tool.id;
+            
+            // Generate seed for image
+            const seed = tool.name.replace(/[^a-zA-Z]/g, '').toLowerCase();
+            const imgUrl = `https://picsum.photos/seed/${seed}/400/220`;
+
+            const badges = [];
+            if(tool.isNew) badges.push(`<span class="badge-new">NEW</span>`);
+            if(tool.isTrending) badges.push(`<span class="badge-hot">TRENDING</span>`);
+
+            let pricingClass = 'pricing-free';
+            if(tool.pricing === 'Paid') pricingClass = 'pricing-paid';
+            if(tool.pricing === 'Freemium') pricingClass = 'pricing-freemium';
+
+            div.innerHTML = `
+                <div class="card-top">
+                    <img class="card-logo" src="https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=141419&color=fff&rounded=true" alt="logo">
+                    <div>
+                        <div class="card-cat">${tool.category}</div>
+                        <div class="card-title">${tool.name}</div>
+                        <div style="display:flex; gap:0.5rem;">${badges.join('')}</div>
+                    </div>
+                </div>
+                <div class="card-desc">${tool.description}</div>
+                
+                <div class="card-hidden">
+                    <ul class="use-cases">
+                        ${tool.useCases.map(uc => `<li><i class="ph ph-check-circle"></i> ${uc}</li>`).join('')}
+                    </ul>
+                    <div class="card-meta">
+                        <span class="pricing-badge ${pricingClass}">${tool.pricing}</span>
+                        <div class="rating"><i class="ph-fill ph-star"></i> ${tool.rating}</div>
+                    </div>
+                    <div class="card-actions-hover">
+                        <button class="btn-preview" onclick="openDrawer('${tool.id}'); event.stopPropagation();">Preview</button>
+                        <a href="${tool.link}" target="_blank" class="btn-visit" onclick="event.stopPropagation();">Visit <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                </div>
+            `;
+            
+            // Mobile tap fallback
+            div.addEventListener('click', () => {
+                if(window.innerWidth <= 768) {
+                    const isExp = div.classList.contains('is-expanded');
+                    document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('is-expanded'));
+                    document.querySelectorAll('.grid').forEach(g => g.classList.remove('has-expanded-child'));
+                    if(!isExp) {
+                        div.classList.add('is-expanded');
+                        div.closest('.grid').classList.add('has-expanded-child');
+                    }
+                } else {
+                    openDrawer(tool.id);
+                }
+            });
+
+            wrapper.appendChild(div);
+            return wrapper;
+        }
+
+        /**
+         * 4. INTERACTION LOGIC
+         */
+        
+        // Hover Physics
+        function setupHoverMechanics() {
+            if(window.innerWidth <= 768) return; // Disable hover complex logic on mobile
+            
+            const cards = document.querySelectorAll('.tool-card');
+            let hoverTimer;
+
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    hoverTimer = setTimeout(() => {
+                        card.classList.add('is-expanded');
+                        card.closest('.grid').classList.add('has-expanded-child');
+                    }, 400); // Signature 400ms delay
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    clearTimeout(hoverTimer);
+                    card.classList.remove('is-expanded');
+                    
+                    // Only remove grid class if no cards in it are expanded
+                    const grid = card.closest('.grid');
+                    if(!grid.querySelector('.is-expanded')) {
+                        grid.classList.remove('has-expanded-child');
+                    }
+                });
+            });
+        }
+
+        // Scroll Progress & Reveal
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("scrollProgress").style.width = scrolled + "%";
+        });
+
+        function setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        function setupScrollSpy() {
+            const sections = document.querySelectorAll('.category-section');
+            const menuItems = document.querySelectorAll('.menu-item');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (scrollY >= (sectionTop - 150)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                menuItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('href') === `#${current}`) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Drawer Logic
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        function openDrawer(id) {
+            const tool = TOOLS.find(t => t.id === id);
+            if(!tool) return;
+
+            const seed = tool.name.replace(/[^a-zA-Z]/g, '').toLowerCase();
+            document.getElementById('drawerImage').src = `https://picsum.photos/seed/${seed}/800/400`;
+            document.getElementById('drawerLogo').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=141419&color=fff&rounded=true`;
+            
+            const badges = [];
+            if(tool.isNew) badges.push(`<span class="badge-new">NEW</span>`);
+            if(tool.isTrending) badges.push(`<span class="badge-hot">TRENDING</span>`);
+            badges.push(`<span class="badge-cat">${tool.category}</span>`);
+            
+            document.getElementById('drawerBadges').innerHTML = badges.join('');
+            document.getElementById('drawerTitle').textContent = tool.name;
+            document.getElementById('drawerTagline').textContent = tool.tagline;
+            document.getElementById('drawerDesc').textContent = tool.description;
+            
+            document.getElementById('drawerUseCases').innerHTML = tool.useCases.map(uc => `<li><i class="ph-fill ph-check-circle"></i> <span>${uc}</span></li>`).join('');
+            document.getElementById('drawerTarget').innerHTML = tool.target.map(tg => `<span class="tag">${tg}</span>`).join('');
+            
+            document.getElementById('drawerHowTo').innerHTML = tool.howToGet.replace(/->/g, '<br>↓<br>');
+            
+            const pClass = tool.pricing === 'Paid' ? 'pricing-paid' : (tool.pricing === 'Freemium' ? 'pricing-freemium' : 'pricing-free');
+            const pEl = document.getElementById('drawerPricing');
+            pEl.className = `pricing-badge ${pClass}`;
+            pEl.textContent = tool.pricing;
+
+            document.getElementById('drawerRating').innerHTML = `<i class="ph-fill ph-star"></i> ${tool.rating} <span class="rating-date">(${tool.launchDate})</span>`;
+            
+            document.getElementById('drawerLink').href = tool.link;
+
+            drawerOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // prevent bg scrolling
+        }
+
+        function closeDrawer() {
+            drawerOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        drawerOverlay.addEventListener('click', (e) => {
+            if(e.target === drawerOverlay) closeDrawer();
+        });
+
+        // Command Palette Logic
+        const cmdOverlay = document.getElementById('cmdOverlay');
+        const cmdInput = document.getElementById('cmdInput');
+        const cmdResults = document.getElementById('cmdResults');
+
+        function toggleCmdK() {
+            cmdOverlay.classList.toggle('active');
+            if(cmdOverlay.classList.contains('active')) {
+                cmdInput.focus();
+                cmdInput.value = '';
+                renderCmdResults(TOOLS); // show all initially
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
+        cmdInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = TOOLS.filter(t => t.name.toLowerCase().includes(query) || t.description.toLowerCase().includes(query) || t.category.toLowerCase().includes(query));
+            renderCmdResults(filtered);
+        });
+
+        function renderCmdResults(results) {
+            if(results.length === 0) {
+                cmdResults.innerHTML = `<div class="cmd-no-results">No tools found.</div>`;
+                return;
+            }
+            cmdResults.innerHTML = results.map(t => `
+                <div class="cmd-item" onclick="toggleCmdK(); openDrawer('${t.id}')">
+                    <img class="cmd-item-logo" src="https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=141419&color=fff&rounded=true">
+                    <div class="cmd-item-details">
+                        <div class="cmd-item-name">${t.name}</div>
+                        <div class="cmd-item-cat">${t.category} &bull; ${t.pricing}</div>
+                    </div>
+                    <i class="ph ph-arrow-right" style="color: var(--text-muted);"></i>
+                </div>
+            `).join('');
+        }
+
+        // Global Keydown bindings
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDrawer();
+                if(cmdOverlay.classList.contains('active')) toggleCmdK();
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                toggleCmdK();
+            }
+        });
+
+        // Custom Cursor Logic (Desktop Only)
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let ringX = mouseX;
+        let ringY = mouseY;
+
+        if (window.innerWidth > 768) {
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                
+                // Hover effect logic
+                if(e.target.closest('button, a, .tool-card, .menu-item, .search-box')) {
+                    ring.classList.add('active');
+                } else {
+                    ring.classList.remove('active');
+                }
+            });
+
+            // Smooth lag animation for ring
+            function animateCursor() {
+                ringX += (mouseX - ringX) * 0.15;
+                ringY += (mouseY - ringY) * 0.15;
+                ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+                requestAnimationFrame(animateCursor);
+            }
+            animateCursor();
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'ph ph-sun';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'ph ph-moon';
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
